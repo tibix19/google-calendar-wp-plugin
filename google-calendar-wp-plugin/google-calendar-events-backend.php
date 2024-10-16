@@ -39,31 +39,32 @@ function gce_admin_page()
     </div>
 
     <script>
-    jQuery(document).ready(function($) {
-        var showingFutureEvents = true;
-        $('#toggle-events').on('click', function() {
-            var sortOrder = showingFutureEvents ? 'past' : 'future';
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'gce_filter_events',
-                    sort_order: sortOrder,
-                    is_admin: true
-                },
-                success: function(response) {
-                    $('#gce-events-list').html(response);
-                    showingFutureEvents = !showingFutureEvents;
-                    $('#toggle-events').text(showingFutureEvents ? 'Voir les événements passés' : 'Voir les événements futurs');
-                }
+        jQuery(document).ready(function($) {
+            var showingFutureEvents = true;
+            $('#toggle-events').on('click', function() {
+                var sortOrder = showingFutureEvents ? 'past' : 'future';
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'gce_filter_events',
+                        sort_order: sortOrder,
+                        is_admin: true
+                    },
+                    success: function(response) {
+                        $('#gce-events-list').html(response);
+                        showingFutureEvents = !showingFutureEvents;
+                        $('#toggle-events').text(showingFutureEvents ? 'Voir les événements passés' : 'Voir les événements futurs');
+                    }
+                });
             });
         });
-    });
     </script>
 <?php
 }
 
-function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $filter_athletisme = true, $filter_agres = true, $is_admin = false) {
+function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $filter_athletisme = true, $filter_agres = true, $is_admin = false)
+{
     $current_time = date('c');
     $url = 'https://www.googleapis.com/calendar/v3/calendars/' . urlencode($calendar_id) . '/events?key=' . urlencode($api_key) . '&singleEvents=true&orderBy=startTime&maxResults=2500';
 
@@ -99,7 +100,7 @@ function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $fil
     });
 
     echo '<table class="gce-events-table">';
-    echo '<thead><tr><th>Titre</th><th>Date de début</th><th>Date de fin</th><th>Lieu</th></tr></thead><tbody>';
+    echo '<thead><tr><th>Date</th><th>Titre</th><th>Lieu</th></tr></thead><tbody>';
 
     foreach ($events['items'] as $event) {
         $summary = isset($event['summary']) ? esc_html($event['summary']) : 'Sans titre';
@@ -120,10 +121,50 @@ function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $fil
             }
         }
 
+        $start_datetime = new DateTime($start);
+        $end_datetime = new DateTime($end);
+
+        // Ajuster la date de fin pour les événements toute la journée
+        $is_all_day = !isset($event['start']['dateTime']);
+        if ($is_all_day) {
+            $end_datetime->modify('-1 day');
+        }
+
+        $start_formatted = $start_datetime->format('d/m/Y');
+        $end_formatted = $end_datetime->format('d/m/Y');
+
+        $start_time = $start_datetime->format('H:i');
+        $end_time = $end_datetime->format('H:i');
+
+        if ($start_datetime->format('H:i') !== '00:00') {
+            $start_formatted .= ' ' . $start_datetime->format('H:i');
+        }
+        if ($end_datetime->format('H:i') !== '00:00') {
+            $end_formatted .= ' ' . $end_datetime->format('H:i');
+        }
+
         echo '<tr class="' . $event_class . '">';
+        echo '<td class="gce-date-column">';
+        echo '<div class="gce-start-date">' . esc_html($start_formatted);
+        if (!$is_all_day && $start_time !== '00:00') {
+            echo ' ' . esc_html($start_time);
+        }
+        echo '</div>';
+
+        if ($start_formatted !== $end_formatted) {
+            echo '<div class="gce-date-separator"></div>';
+            echo '<div class="gce-end-date">' . esc_html($end_formatted);
+            if (!$is_all_day && $end_time !== '00:00') {
+                echo ' ' . esc_html($end_time);
+            }
+            echo '</div>';
+        } elseif (!$is_all_day && $start_time !== $end_time && $end_time !== '00:00') {
+            echo '<div class="gce-date-separator"></div>';
+            echo '<div class="gce-end-time">à ' . esc_html($end_time) . '</div>';
+        }
+
+        echo '</td>';
         echo '<td>' . $summary . '</td>';
-        echo '<td>' . esc_html(date('d/m/Y H:i', strtotime($start))) . '</td>';
-        echo '<td>' . esc_html(date('d/m/Y H:i', strtotime($end))) . '</td>';
         echo '<td>' . $location . '</td>';
         echo '</tr>';
     }
@@ -131,7 +172,8 @@ function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $fil
     echo '</tbody></table>';
 }
 
-function gce_filter_events() {
+function gce_filter_events()
+{
     $api_key = get_option('gce_api_key');
     $calendar_id = get_option('gce_calendar_id');
     $filter_athletisme = isset($_POST['filter_athletisme']) && $_POST['filter_athletisme'] === 'true';
