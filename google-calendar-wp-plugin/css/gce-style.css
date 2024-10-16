@@ -1,0 +1,30 @@
+.gce-events-container {
+    margin-bottom: 20px;
+}
+
+.gce-filters, .gce-toggle-events {
+    margin-bottom: 10px;
+}
+
+.gce-events-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.gce-events-table th, .gce-events-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.gce-events-table th {
+    background-color: #f2f2f2;
+}
+
+.gce-athletisme {
+    background-color: #ffcccb;
+}
+
+.gce-agres {
+    background-color: #c2f0c2;
+}
