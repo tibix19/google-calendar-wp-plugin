@@ -36,80 +36,87 @@ function gce_admin_page()
 
         <?php if ($api_key && $calendar_id): ?>
             <h2>Liste des événements</h2>
+            <div class="gce-filters">
+                <!-- <button id="gce-filter-all" class="gce-filter-btn active">Afficher tout</button>
+                <button id="gce-filter-athletisme" class="gce-filter-btn" data-filter="athletisme">Athlétisme</button>
+                <button id="gce-filter-agres" class="gce-filter-btn" data-filter="agres">Agrès</button> -->
+            </div>
             <button id="toggle-events">Voir les événements passés</button>
             <div id="gce-events-list">
-                <!-- Afficher les événements futurs en appelant la fonction gce_display_events -->
-                <?php gce_display_events($api_key, $calendar_id, 'future', true, true, true); ?>
+                <?php gce_display_events($api_key, $calendar_id, 'future', 'all', true); ?>
             </div>
         <?php endif; ?>
     </div>
 
     <script>
         jQuery(document).ready(function($) {
-            var showingFutureEvents = true; // État pour savoir si les événements futurs sont affichés
+            var showingFutureEvents = true;
+
+            $('.gce-filter-btn').on('click', function() {
+                $('.gce-filter-btn').removeClass('active');
+                $(this).addClass('active');
+                var filter = $(this).data('filter') || 'all';
+                updateEvents(filter);
+            });
+
             $('#toggle-events').on('click', function() {
-                // Déterminer l'ordre de tri (passé ou futur) en fonction de l'état actuel
                 var sortOrder = showingFutureEvents ? 'past' : 'future';
+                updateEvents($('.gce-filter-btn.active').data('filter') || 'all', sortOrder);
+            });
+
+            function updateEvents(filter, sortOrder) {
+                sortOrder = sortOrder || (showingFutureEvents ? 'future' : 'past');
                 $.ajax({
-                    url: ajaxurl, // URL de l'Ajax de WordPress
-                    type: 'POST', // Méthode POST pour envoyer la requête
+                    url: ajaxurl,
+                    type: 'POST',
                     data: {
-                        action: 'gce_filter_events', // Action à effectuer
-                        sort_order: sortOrder, // Ordre de tri sélectionné
-                        is_admin: true // Indiquer que la requête vient de l'admin
+                        action: 'gce_filter_events',
+                        filter: filter,
+                        sort_order: sortOrder,
+                        is_admin: true
                     },
                     success: function(response) {
-                        // Mettre à jour la liste des événements avec la réponse reçue
                         $('#gce-events-list').html(response);
-                        showingFutureEvents = !showingFutureEvents; // Inverser l'état
-                        // Changer le texte du bouton en fonction de l'état actuel
+                        showingFutureEvents = (sortOrder === 'future');
                         $('#toggle-events').text(showingFutureEvents ? 'Voir les événements passés' : 'Voir les événements futurs');
                     }
                 });
-            });
+            }
         });
     </script>
 <?php
 }
 
 // Fonction pour afficher les événements à partir de l'API Google Calendar
-function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $filter_athletisme = true, $filter_agres = true, $is_admin = false)
+function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $filter = 'all', $is_admin = false)
 {
-    $current_time = date('c'); // Obtenir l'heure actuelle au format ISO 8601
-    // define the url for the API request to the Google calendar
+    $current_time = date('c');
     $url = 'https://www.googleapis.com/calendar/v3/calendars/' . urlencode($calendar_id) . '/events?key=' . urlencode($api_key) . '&singleEvents=true&orderBy=startTime&maxResults=2500';
 
-    // Ajuster l'URL selon l'ordre de tri souhaité (futur ou passé)
     if ($sort_order == 'future') {
-        $url .= '&timeMin=' . urlencode($current_time); // include only future event
+        $url .= '&timeMin=' . urlencode($current_time);
     } elseif ($sort_order == 'past') {
-        $url .= '&timeMax=' . urlencode($current_time); // include only past event
+        $url .= '&timeMax=' . urlencode($current_time);
     }
 
-    // Effectuer la requête à l'API
     $response = wp_remote_get($url);
-    // Vérifier s'il y a une erreur dans la réponse
     if (is_wp_error($response)) {
         echo '<p>Erreur lors de la récupération des événements : ' . $response->get_error_message() . '</p>';
         return;
     }
 
-    // Récupérer le corps de la réponse et décoder le json en tableau
     $body = wp_remote_retrieve_body($response);
     $events = json_decode($body, true);
 
-    // Vérifier si des événements ont été trouvés
     if (empty($events['items'])) {
         echo '<p>Aucun événement trouvé.</p>';
         return;
     }
 
-    // Trier les événements selon l'ordre de tri spécifié
     usort($events['items'], function ($a, $b) use ($sort_order) {
         $a_start = isset($a['start']['dateTime']) ? $a['start']['dateTime'] : (isset($a['start']['date']) ? $a['start']['date'] : '');
         $b_start = isset($b['start']['dateTime']) ? $b['start']['dateTime'] : (isset($b['start']['date']) ? $b['start']['date'] : '');
 
-        // Comparer les dates pour trier les événements
         if ($sort_order == 'future') {
             return strcmp($a_start, $b_start);
         } else {
@@ -117,67 +124,58 @@ function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $fil
         }
     });
 
-    // Afficher les événements dans un tableau HTML
     echo '<table class="gce-events-table">';
     echo '<thead><tr><th>Date</th><th>Titre</th><th>Lieu</th></tr></thead><tbody>';
 
-    // Parcourir les événements et les afficher
     foreach ($events['items'] as $event) {
-        // Récupérer les détails de l'événement
         $summary = isset($event['summary']) ? esc_html($event['summary']) : 'Sans titre';
         $start = isset($event['start']['dateTime']) ? $event['start']['dateTime'] : (isset($event['start']['date']) ? $event['start']['date'] : 'Non défini');
         $end = isset($event['end']['dateTime']) ? $event['end']['dateTime'] : (isset($event['end']['date']) ? $event['end']['date'] : 'Non défini');
         $location = isset($event['location']) ? esc_html($event['location']) : 'Non spécifié';
 
-        // Convertir le titre en minuscules pour le filtrage
         $summary_lower = mb_strtolower(remove_accents($summary));
-        $event_class = ''; // Classe CSS pour le filtrage
+        $event_class = '';
 
-        // Appliquer le filtrage en fonction des cases à cocher
-        if (!$is_admin) {
-            if (strpos($summary_lower, 'athletisme') !== false) {
-                if (!$filter_athletisme) continue;
-                $event_class = 'gce-athletisme';
-            } elseif (strpos($summary_lower, 'agres') !== false) {
-                if (!$filter_agres) continue;
-                $event_class = 'gce-agres';
+        if (strpos($summary_lower, 'athletisme') !== false) {
+            $event_class = 'gce-athletisme';
+        } elseif (strpos($summary_lower, 'agres') !== false) {
+            $event_class = 'gce-agres';
+        } elseif (strpos($summary_lower, 'danse') !== false) {
+            $event_class = 'gce-gd';
+        }
+
+
+        if ($filter === 'all' || $event_class === 'gce-' . $filter || $event_class === '') {
+            $start_datetime = new DateTime($start);
+            $end_datetime = new DateTime($end);
+
+            $is_all_day = !isset($event['start']['dateTime']);
+            if ($is_all_day) {
+                $end_datetime->modify('-1 day');
             }
-        }
 
-        // Créer des objets DateTime pour formater les dates
-        $start_datetime = new DateTime($start);
-        $end_datetime = new DateTime($end);
+            $start_formatted = $start_datetime->format('d/m/Y');
+            $end_formatted = $end_datetime->format('d/m/Y');
 
-        // Ajuster la date de fin pour les événements toute la journée
-        $is_all_day = !isset($event['start']['dateTime']);
-        if ($is_all_day) {
-            $end_datetime->modify('-1 day'); // Ajuster la date de fin pour qu'elle soit correcte
-        }
+            if ($start_datetime->format('H:i') !== '00:00') {
+                $start_formatted .= ' ' . $start_datetime->format('H:i');
+            }
+            if ($end_datetime->format('H:i') !== '00:00') {
+                $end_formatted .= ' ' . $end_datetime->format('H:i');
+            }
 
-        // Formater les dates pour l'affichage
-        $start_formatted = $start_datetime->format('d/m/Y');
-        $end_formatted = $end_datetime->format('d/m/Y');
-
-        // Si la date de l'heure est égale à 00:00 on n'affiche pas l'heure
-        if ($start_datetime->format('H:i') !== '00:00') {
-            $start_formatted .= ' ' . $start_datetime->format('H:i');
+            echo '<tr class="' . $event_class . '">';
+            echo '<td class="gce-date-column">';
+            echo '<div class="gce-start-date">' . esc_html($start_formatted) . '</div>';
+            if ($start_formatted !== $end_formatted) {
+                echo '<div class="gce-date-separator"></div>';
+                echo '<div class="gce-end-date">' . esc_html($end_formatted) . '</div>';
+            }
+            echo '</td>';
+            echo '<td>' . $summary . '</td>';
+            echo '<td>' . $location . '</td>';
+            echo '</tr>';
         }
-        if ($end_datetime->format('H:i') !== '00:00') {
-            $end_formatted .= ' ' . $end_datetime->format('H:i');
-        }
-
-        // Afficher l'événement dans une ligne du tableau
-        echo '<tr class="' . $event_class . '">';
-        echo '<td class="gce-date-column">';
-        echo '<div class="gce-start-date">' . esc_html($start_formatted) . '</div>';
-        if ($start_formatted !== $end_formatted) {
-            echo '<div class="gce-date-separator"></div>'; // Ajout du séparateur
-            echo '<div class="gce-end-date">' . esc_html($end_formatted) . '</div>';
-        }
-        echo '</td>';
-        echo '<td>' . $summary . '</td>';
-        echo '<td>' . $location . '</td>';
-        echo '</tr>';
     }
 
     echo '</tbody></table>';
@@ -186,21 +184,16 @@ function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $fil
 // Fonction pour filtrer les événements en fonction de la requête AJAX
 function gce_filter_events()
 {
-    // Récupérer la clé API et l'ID du calendrier depuis les options enregistrées
     $api_key = get_option('gce_api_key');
     $calendar_id = get_option('gce_calendar_id');
 
-    // Récupérer les paramètres envoyés par la requête AJAX
-    $filter_athletisme = isset($_POST['filter_athletisme']) && $_POST['filter_athletisme'] === 'true';
-    $filter_agres = isset($_POST['filter_agres']) && $_POST['filter_agres'] === 'true';
-    $sort_order = isset($_POST['sort_order']) ? $_POST['sort_order'] : 'future'; // Ordre par défaut: événements futurs
-    $is_admin = isset($_POST['is_admin']) && $_POST['is_admin'] === 'true'; // Vérifier si la requête vient de l'admin
+    $filter = isset($_POST['filter']) ? $_POST['filter'] : 'all';
+    $sort_order = isset($_POST['sort_order']) ? $_POST['sort_order'] : 'future';
+    $is_admin = isset($_POST['is_admin']) && $_POST['is_admin'] === 'true';
 
-    // Appeler la fonction pour afficher les événements avec les paramètres de filtrage
-    gce_display_events($api_key, $calendar_id, $sort_order, $filter_athletisme, $filter_agres, $is_admin);
+    gce_display_events($api_key, $calendar_id, $sort_order, $filter, $is_admin);
     wp_die();
 }
 
-// Ajouter les actions AJAX pour filtrer les événements (pour les utilisateurs connectés et non connectés)
 add_action('wp_ajax_gce_filter_events', 'gce_filter_events');
 add_action('wp_ajax_nopriv_gce_filter_events', 'gce_filter_events');

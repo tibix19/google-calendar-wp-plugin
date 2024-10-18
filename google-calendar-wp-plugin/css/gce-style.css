@@ -16,13 +16,15 @@
     text-align: left;
 }
 
+
 .gce-date-column {
     white-space: nowrap;
     width: 1%;
 }
 
 .gce-start-date {
-    font-weight: bold;
+    font-size: 0.9em;
+    color: #666;
 }
 
 .gce-end-date {
@@ -37,12 +39,69 @@
     width: 100%;
 }
 
+/* Color of the each catégorie in the tableau */
 .gce-athletisme {
-    background-color: #FFD700; /* Jaune pour l'athlétisme */
+    background-color: #98FB98; /* Vert clair pour l'athlétisme */
 }
 
 .gce-agres {
-    background-color: #98FB98; /* Vert clair pour les agrès */
+    background-color: #FFD700; /* Jaune pour les agrès */
+}
+
+.gce-gd {
+    background-color: #bc69ed; /* Jaune pour les agrès */
+}
+
+.gce-filters {
+    margin-bottom: 20px;
+}
+
+.gce-filter-btn {
+    padding: 10px 15px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #333; /* Couleur du texte */
+}
+
+#gce-filter-all {
+    background-color: #f0f0f0;
+}
+
+#gce-filter-athletisme {
+    background-color: #98FB98; /* Même vert que .gce-athletisme */
+}
+
+#gce-filter-agres {
+    background-color: #FFD700; /* Même jaune que .gce-agres */
+}
+
+#gce-filter-gd {
+    background-color: #bc69ed; /* Même jaune que .gce-gd */
+}
+
+#gce-filter-gd.active {
+    background-color: #a74ade; /* Même jaune que .gce-gd */
+}
+
+.gce-filter-btn.active {
+    font-weight: bold;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05); /* Légère augmentation de taille */
+}
+
+#gce-filter-all.active {
+    background-color: #d0d0d0; /* Plus foncé quand actif */
+}
+
+#gce-filter-athletisme.active {
+    background-color: #7CFC00; /* Vert plus vif quand actif */
+}
+
+#gce-filter-agres.active {
+    background-color: #FFD100; /* Jaune plus vif quand actif */
 }
 
 /* Responsive design pour les petits écrans */
