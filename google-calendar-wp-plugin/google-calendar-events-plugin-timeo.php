@@ -9,6 +9,7 @@ Author: Beuchat Timéo
 // Inclure les fichiers nécessaires pour le frontend et le backend
 include(plugin_dir_path(__FILE__) . 'google-calendar-events-backend.php');
 include(plugin_dir_path(__FILE__) . 'google-calendar-events-frontend.php');
+include(plugin_dir_path(__FILE__) . 'class-gce-categories-manager.php');
 
 // Création du menu d'administration dans le tableau de bord de WordPress
 function gce_add_admin_menu()

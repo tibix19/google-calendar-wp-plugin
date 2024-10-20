@@ -52,10 +52,16 @@ function gce_format_event_date($datetime_str, $is_all_day = false)
 
 function gce_get_event_class($summary)
 {
+    $categories_manager = new GCE_Categories_Manager();
+    $categories = $categories_manager->get_categories();
     $summary_lower = mb_strtolower(remove_accents($summary));
-    if (strpos($summary_lower, 'athletisme') !== false) return 'gce-athletisme';
-    if (strpos($summary_lower, 'agres') !== false) return 'gce-agres';
-    if (strpos($summary_lower, 'danse') !== false) return 'gce-gd';
+
+    foreach ($categories as $category) {
+        $category_name_lower = mb_strtolower(remove_accents($category['name']));
+        if (strpos($summary_lower, $category_name_lower) !== false) {
+            return 'gce-' . $category['slug'];
+        }
+    }
     return '';
 }
 
@@ -122,62 +128,100 @@ function gce_render_events_table($events, $filter)
 // Admin page function
 function gce_admin_page()
 {
+    $categories_manager = new GCE_Categories_Manager();
+
+    // Traitement de l'ajout de catégorie
+    if (isset($_POST['add_category'])) {
+        $name = sanitize_text_field($_POST['category_name']);
+        $color = sanitize_hex_color($_POST['category_color']);
+        $categories_manager->add_category($name, $color);
+    }
+
+    // Traitement de la suppression
+    if (isset($_POST['delete_category'])) {
+        $id = intval($_POST['category_id']);
+        $categories_manager->delete_category($id);
+    }
+
+    // Récupération des catégories
+    $categories = $categories_manager->get_categories();
 ?>
     <div class="wrap">
         <h1>Google Calendar Events</h1>
+
+        <!-- Configuration API -->
         <form method="post" action="">
+            <h2>Configuration API</h2>
             <?php
             if (gce_save_settings()) {
-                echo '<div class="updated"><p>Clé API et ID du calendrier enregistrés avec succès.</p></div>';
+                echo '<div class="updated"><p>Paramètres enregistrés avec succès.</p></div>';
             }
             $settings = gce_get_settings();
             ?>
             <table class="form-table">
-                <tr valign="top">
-                    <th scope="row">Google Calendar API Key</th>
+                <tr>
+                    <th>Google Calendar API Key</th>
                     <td><input type="text" name="gce_api_key" value="<?php echo esc_attr($settings['api_key']); ?>" size="50" /></td>
                 </tr>
-                <tr valign="top">
-                    <th scope="row">Google Calendar ID</th>
+                <tr>
+                    <th>Google Calendar ID</th>
                     <td><input type="text" name="gce_calendar_id" value="<?php echo esc_attr($settings['calendar_id']); ?>" size="50" /></td>
                 </tr>
             </table>
-            <?php submit_button('Enregistrer les paramètres et actualiser'); ?>
+            <?php submit_button('Enregistrer les paramètres'); ?>
         </form>
 
-        <?php if ($settings['api_key'] && $settings['calendar_id']): ?>
-            <h2>Liste des événements</h2>
-            <button id="toggle-events">Voir les événements passés</button>
-            <div id="gce-events-list">
-                <?php gce_display_events($settings['api_key'], $settings['calendar_id'], 'future', 'all'); ?>
-            </div>
-        <?php endif; ?>
+        <!-- Gestion des catégories -->
+        <h2>Gestion des catégories</h2>
+        <form method="post" action="" class="add-category-form">
+            <table class="form-table">
+                <tr>
+                    <th>Nom de la catégorie</th>
+                    <td><input type="text" name="category_name" required /></td>
+                </tr>
+                <tr>
+                    <th>Couleur</th>
+                    <td><input type="color" name="category_color" required /></td>
+                </tr>
+            </table>
+            <input type="submit" name="add_category" class="button button-primary" value="Ajouter une catégorie" />
+        </form>
+
+        <h3>Catégories existantes</h3>
+        <table class="wp-list-table widefat fixed striped">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Slug</th>
+                    <th>Couleur</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($categories as $category): ?>
+                    <tr>
+                        <td><?php echo esc_html($category['name']); ?></td>
+                        <td><?php echo esc_html($category['slug']); ?></td>
+                        <td>
+                            <span style="background-color: <?php echo esc_attr($category['color']); ?>; 
+                                   display: inline-block; 
+                                   width: 20px; 
+                                   height: 20px; 
+                                   margin-right: 5px;"></span>
+                            <?php echo esc_html($category['color']); ?>
+                        </td>
+                        <td>
+                            <form method="post" action="" style="display:inline;">
+                                <input type="hidden" name="category_id" value="<?php echo $category['id']; ?>" />
+                                <input type="submit" name="delete_category" class="button button-small button-link-delete"
+                                    value="Supprimer" onclick="return confirm('Êtes-vous sûr ?');" />
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
-
-    <script>
-        jQuery(document).ready(function($) {
-            var showingFutureEvents = true;
-
-            $('#toggle-events').on('click', function() {
-                var sortOrder = showingFutureEvents ? 'past' : 'future';
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'gce_filter_events',
-                        filter: 'all',
-                        sort_order: sortOrder,
-                        is_admin: true
-                    },
-                    success: function(response) {
-                        $('#gce-events-list').html(response);
-                        showingFutureEvents = !showingFutureEvents;
-                        $('#toggle-events').text(showingFutureEvents ? 'Voir les événements passés' : 'Voir les événements futurs');
-                    }
-                });
-            });
-        });
-    </script>
 <?php
 }
 

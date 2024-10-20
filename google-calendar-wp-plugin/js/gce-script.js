@@ -3,7 +3,6 @@ jQuery(document).ready(function ($) {
     var sortOrder = $("#gce-show-past-events").is(":visible")
       ? "future"
       : "past";
-
     $.ajax({
       url: gce_ajax.ajax_url,
       type: "POST",
