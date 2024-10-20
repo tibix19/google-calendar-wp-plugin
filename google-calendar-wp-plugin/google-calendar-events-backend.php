@@ -186,7 +186,7 @@ function gce_admin_page()
                 </tr>
                 <tr>
                     <th>Couleur</th>
-                    <td><input type="color" name="category_color" required /></td>
+                    <td><input type="color" name="category_color" value="#ff0000" required /></td>
                 </tr>
             </table>
             <input type="submit" name="add_category" class="button button-primary" value="Ajouter une catégorie" />

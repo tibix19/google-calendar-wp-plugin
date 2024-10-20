@@ -39,26 +39,14 @@
     width: 100%;
 }
 
-/* Color of the each catégorie in the tableau */
-.gce-athletisme {
-    background-color: #98FB98; /* Vert clair pour l'athlétisme */
-}
-
-.gce-agres {
-    background-color: #FFD700; /* Jaune pour les agrès */
-}
-
-.gce-gd {
-    background-color: #bc69ed; /* Jaune pour les agrès */
-}
-
 .gce-filters {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .gce-filter-btn {
     padding: 10px 15px;
     margin-right: 10px;
+    margin-bottom: 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -68,22 +56,6 @@
 
 #gce-filter-all {
     background-color: #f0f0f0;
-}
-
-#gce-filter-athletisme {
-    background-color: #98FB98; /* Même vert que .gce-athletisme */
-}
-
-#gce-filter-agres {
-    background-color: #FFD700; /* Même jaune que .gce-agres */
-}
-
-#gce-filter-gd {
-    background-color: #bc69ed; /* Même jaune que .gce-gd */
-}
-
-#gce-filter-gd.active {
-    background-color: #a74ade; /* Même jaune que .gce-gd */
 }
 
 .gce-filter-btn.active {
@@ -96,16 +68,8 @@
     background-color: #d0d0d0; /* Plus foncé quand actif */
 }
 
-#gce-filter-athletisme.active {
-    background-color: #7CFC00; /* Vert plus vif quand actif */
-}
 
-#gce-filter-agres.active {
-    background-color: #FFD100; /* Jaune plus vif quand actif */
-}
-
-/* Responsive design pour les petits écrans */
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 500px) {
     .gce-events-table,
     .gce-events-table thead,
     .gce-events-table tbody,
@@ -123,18 +87,34 @@
 
     .gce-events-table tr {
         margin-bottom: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .gce-events-table tr[class*="gce-"]::before {
+        width: 100%;
+        height: 4px;
+        top: 0;
+        left: 0;
+        right: 0;
     }
 
     .gce-events-table td {
         border: none;
+        border-bottom: 1px solid #ddd;
         position: relative;
         padding-left: 50%;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .gce-events-table td:last-child {
+        border-bottom: none;
     }
 
     .gce-events-table td:before {
         position: absolute;
-        top: 6px;
-        left: 6px;
+        top: 8px;
+        left: 8px;
         width: 45%;
         padding-right: 10px;
         white-space: nowrap;
@@ -144,5 +124,10 @@
 
     .gce-date-column {
         width: auto;
+    }
+
+    .gce-filter-btn {
+        margin-bottom: 10px;
+        width: 100%;
     }
 }
