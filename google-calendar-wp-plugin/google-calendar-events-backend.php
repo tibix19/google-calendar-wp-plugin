@@ -133,8 +133,9 @@ function gce_admin_page()
     // Traitement de l'ajout de catégorie
     if (isset($_POST['add_category'])) {
         $name = sanitize_text_field($_POST['category_name']);
+        $slug = sanitize_text_field($_POST['category_slug']);
         $color = sanitize_hex_color($_POST['category_color']);
-        $categories_manager->add_category($name, $color);
+        $categories_manager->add_category($name, $slug, $color);
     }
 
     // Traitement de la suppression
@@ -178,6 +179,10 @@ function gce_admin_page()
                 <tr>
                     <th>Nom de la catégorie</th>
                     <td><input type="text" name="category_name" required /></td>
+                </tr>
+                <tr>
+                    <th>Slug (Nom de la cat. en minuscule)</th>
+                    <td><input type="text" name="category_slug" required /></td>
                 </tr>
                 <tr>
                     <th>Couleur</th>

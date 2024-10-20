@@ -33,10 +33,9 @@ class GCE_Categories_Manager
         return $this->categories;
     }
 
-    public function add_category($name, $color)
+    public function add_category($name, $slug, $color)
     {
         $id = time(); // Utilisation du timestamp comme ID
-        $slug = sanitize_title($name);
 
         $this->categories[] = [
             'id' => $id,
