@@ -92,6 +92,49 @@ function gce_display_frontend_events()
             color: red;
         }
 
+        .gce-events-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .gce-events-table th,
+        .gce-events-table td {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .gce-events-table th {
+            font-weight: bold;
+        }
+
+        .gce-date-column {
+            position: relative;
+            padding-left: 20px !important;
+        }
+
+        .gce-category-indicator {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 12px;
+        }
+
+        .gce-events-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Nouveau style pour l'effet de survol */
+        .gce-events-table tbody tr {
+            transition: background-color 0.3s ease;
+        }
+
+        .gce-events-table tbody tr:hover {
+            background-color: rgba(255, 0, 0, 0.1);
+            /* Rouge avec 10% d'opacité */
+        }
+
         <?php endforeach; ?>
     </style>
 <?php

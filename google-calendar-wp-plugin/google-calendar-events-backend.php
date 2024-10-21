@@ -91,6 +91,9 @@ function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $fil
 
 function gce_render_events_table($events, $filter)
 {
+    $categories_manager = new GCE_Categories_Manager();
+    $categories = $categories_manager->get_categories();
+
     echo '<div class="gce-events-wrapper">';
     echo '<table class="gce-events-table">';
     echo '<thead><tr>
@@ -114,10 +117,20 @@ function gce_render_events_table($events, $filter)
         $start = gce_format_event_date($event['start']['dateTime'] ?? $event['start']['date'], $is_all_day);
         $end = gce_format_event_date($event['end']['dateTime'] ?? $event['end']['date'], $is_all_day);
 
-        echo '<tr class="' . $event_class . '">';
+        $category_color = '';
+        foreach ($categories as $category) {
+            if ('gce-' . $category['slug'] === $event_class) {
+                $category_color = $category['color'];
+                break;
+            }
+        }
+
+        echo '<tr>';
         echo '<td class="gce-date-column">';
+        if ($category_color) {
+            echo '<div class="gce-category-indicator" style="background-color: ' . esc_attr($category_color) . ';"></div>';
+        }
         echo '<div class="gce-start-date">' . esc_html($start) . '</div>';
-        // Afficher la date de fin uniquement si elle est différente de la date de début
         if ($start !== $end && !($is_all_day && date('Y-m-d', strtotime($end)) === date('Y-m-d', strtotime($start)))) {
             echo '<div class="gce-date-separator"></div>';
             echo '<div class="gce-end-date">' . esc_html($end) . '</div>';
@@ -130,7 +143,6 @@ function gce_render_events_table($events, $filter)
 
     echo '</tbody></table></div>';
 }
-
 // Admin page function
 function gce_admin_page()
 {
