@@ -62,7 +62,7 @@ function gce_get_event_class($summary)
             return 'gce-' . $category['slug'];
         }
     }
-    return '';
+    return 'gce-uncategorized';
 }
 
 // Display functions
@@ -102,7 +102,13 @@ function gce_render_events_table($events, $filter)
 
     foreach ($events as $event) {
         $event_class = gce_get_event_class($event['summary'] ?? '');
-        if ($filter !== 'all' && $event_class !== 'gce-' . $filter && $event_class !== '') continue;
+        if ($filter !== 'all' && $event_class !== 'gce-' . $filter) {
+            if ($filter === 'uncategorized' && $event_class !== 'gce-uncategorized') {
+                continue;
+            } elseif ($filter !== 'uncategorized' && $event_class !== '') {
+                continue;
+            }
+        }
 
         $is_all_day = !isset($event['start']['dateTime']);
         $start = gce_format_event_date($event['start']['dateTime'] ?? $event['start']['date'], $is_all_day);

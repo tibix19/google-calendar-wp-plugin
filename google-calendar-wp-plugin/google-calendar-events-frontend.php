@@ -44,10 +44,17 @@ function gce_display_frontend_events()
                     <?php echo esc_html($category['name']); ?>
                 </button>
             <?php endforeach; ?>
+            <button id="gce-filter-uncategorized" class="gce-filter-btn" data-filter="uncategorized">
+                Divers
+            </button>
         </div>
         <div class="gce-toggle-events">
-            <button id="gce-show-past-events">Voir les événements passés</button>
-            <button id="gce-show-future-events" style="display:none;">Voir les événements futurs</button>
+            <a href="#" id="gce-show-past-events" class="gce-toggle-link">
+                &#129144; Voir les événements passés
+            </a>
+            <a href="#" id="gce-show-future-events" class="gce-toggle-link" style="display:none;">
+                Voir les événements futurs &#129146;
+            </a>
         </div>
         <div id="gce-events-list">
             <?php gce_display_events($api_key, $calendar_id, 'future', 'all'); ?>
@@ -65,6 +72,24 @@ function gce_display_frontend_events()
 
         #gce-filter-<?php echo esc_attr($category['slug']); ?>.active {
             background-color: <?php echo esc_attr(adjustBrightness($category['color'], -10)); ?>;
+        }
+
+        #gce-filter-uncategorized {
+            background-color: #f0f0f0;
+        }
+
+        #gce-filter-uncategorized.active {
+            background-color: #d0d0d0;
+        }
+
+        .gce-toggle-link {
+            text-decoration: none;
+            color: inherit;
+            transition: color 0.3s, text-decoration 0.3s;
+        }
+
+        .gce-toggle-link:hover {
+            color: red;
         }
 
         <?php endforeach; ?>
