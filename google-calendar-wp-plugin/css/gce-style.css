@@ -68,6 +68,30 @@
     background-color: #d0d0d0; /* Plus foncé quand actif */
 }
 
+.gce-calendar-link {
+    margin-top: 20px;
+    text-align: center;
+}
+
+
+.gce-google-calendar-btn:hover {
+    color: red;
+    text-decoration: none;
+}
+
+/* Ajout d'un style pour les appareils mobiles */
+@media screen and (max-width: 500px) {
+    .gce-calendar-link {
+        margin-top: 15px;
+    }
+    
+    .gce-google-calendar-btn {
+        width: 100%;
+        text-align: center;
+        padding: 12px 20px;
+    }
+}
+
 
 @media screen and (max-width: 500px) {
     .gce-events-table,

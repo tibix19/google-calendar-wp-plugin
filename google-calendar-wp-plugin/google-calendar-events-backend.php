@@ -22,13 +22,17 @@ function gce_get_settings()
 function gce_fetch_events($api_key, $calendar_id, $sort_order = 'future')
 {
     $current_time = date('c');
+
+    // Base URL
     $url = 'https://www.googleapis.com/calendar/v3/calendars/' . urlencode($calendar_id) .
         '/events?key=' . urlencode($api_key) . '&singleEvents=true&orderBy=startTime&maxResults=2500';
 
     if ($sort_order == 'future') {
         $url .= '&timeMin=' . urlencode($current_time);
     } elseif ($sort_order == 'past') {
-        $url .= '&timeMax=' . urlencode($current_time);
+        // Calculer la date d'il y a un an
+        $one_year_ago = date('c', strtotime('-1 year'));
+        $url .= '&timeMin=' . urlencode($one_year_ago) . '&timeMax=' . urlencode($current_time);
     }
 
     $response = wp_remote_get($url);
@@ -93,6 +97,9 @@ function gce_render_events_table($events, $filter)
 {
     $categories_manager = new GCE_Categories_Manager();
     $categories = $categories_manager->get_categories();
+    $settings = gce_get_settings(); // Récupération des paramètres
+    $calendar_id = $settings['calendar_id']; // Utilisation de la bonne méthode pour récupérer l'ID
+
 
     echo '<div class="gce-events-wrapper">';
     echo '<table class="gce-events-table">';
@@ -142,7 +149,15 @@ function gce_render_events_table($events, $filter)
     }
 
     echo '</tbody></table></div>';
+    echo '<div class="gce-calendar-link">';
+    echo '<a href="https://calendar.google.com/calendar/u/0/embed?src=' . urlencode($calendar_id) . '" 
+             target="_blank" 
+             class="gce-google-calendar-btn">
+             Voir le calendrier complet sur Google Calendar
+          </a>';
+    echo '</div>';
 }
+
 // Admin page function
 function gce_admin_page()
 {
