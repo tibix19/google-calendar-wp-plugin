@@ -34,7 +34,13 @@ function gce_display_frontend_events()
 
     ob_start();
 ?>
+
     <div class="gce-events-container">
+        <button class="gce-burger-menu" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
         <div class="gce-filters">
             <button id="gce-filter-all" class="gce-filter-btn active">Afficher tout</button>
             <?php foreach ($categories as $category): ?>
@@ -62,6 +68,7 @@ function gce_display_frontend_events()
     </div>
 
     <style>
+        /* Styles des catégories */
         <?php foreach ($categories as $category): ?>.gce-<?php echo esc_attr($category['slug']); ?> {
             background-color: <?php echo esc_attr($category['color']); ?>;
         }
@@ -74,6 +81,9 @@ function gce_display_frontend_events()
             background-color: <?php echo esc_attr(adjustBrightness($category['color'], -10)); ?>;
         }
 
+        <?php endforeach; ?>
+
+        /* Styles de base */
         #gce-filter-uncategorized {
             background-color: #f0f0f0;
         }
@@ -82,16 +92,25 @@ function gce_display_frontend_events()
             background-color: #d0d0d0;
         }
 
+        .gce-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* Styles des liens */
         .gce-toggle-link {
             text-decoration: none;
             color: inherit;
             transition: color 0.3s, text-decoration 0.3s;
+
         }
 
         .gce-toggle-link:hover {
             color: red;
         }
 
+        /* Styles de la table */
         .gce-events-table {
             width: 100%;
             border-collapse: separate;
@@ -125,18 +144,132 @@ function gce_display_frontend_events()
             border-bottom: none;
         }
 
-        /* Nouveau style pour l'effet de survol */
         .gce-events-table tbody tr {
-            transition: background-color 0.3s ease;
+            transition: background-color 0.15s ease;
         }
 
         .gce-events-table tbody tr:hover {
             background-color: rgba(255, 0, 0, 0.1);
-            /* Rouge avec 10% d'opacité */
         }
 
-        <?php endforeach; ?>
+        /* Style du bouton burger */
+        .gce-burger-menu {
+            display: none;
+            /* Masqué par défaut pour les grandes fenêtres */
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            position: relative;
+            z-index: 1001;
+            margin-bottom: 10px;
+        }
+
+        /* Barres du burger */
+        .gce-burger-menu span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: #333;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+
+        /* Media query pour mobile : afficher le burger menu */
+        @media screen and (max-width: 550px) {
+            .gce-burger-menu {
+                display: block;
+                /* Visible uniquement sur petit écran */
+            }
+
+            .gce-filters {
+                display: none;
+                position: absolute;
+                top: 50px;
+                left: 0;
+                right: 0;
+                background: white;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                flex-direction: column;
+                padding: 10px;
+                z-index: 1000;
+            }
+
+            .gce-filters.show {
+                display: flex;
+            }
+
+            .gce-filter-btn {
+                width: 100%;
+                text-align: left;
+                padding: 12px;
+                margin: 0;
+                border: none;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            }
+
+            .gce-filter-btn:last-child {
+                border-bottom: none;
+            }
+
+            .gce-burger-menu.active span:nth-child(1) {
+                transform: rotate(-45deg) translate(-5px, 6px);
+            }
+
+            .gce-burger-menu.active span:nth-child(2) {
+                opacity: 0;
+            }
+
+            .gce-burger-menu.active span:nth-child(3) {
+                transform: rotate(45deg) translate(-5px, -6px);
+            }
+        }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const burgerMenu = document.querySelector('.gce-burger-menu');
+            const filters = document.querySelector('.gce-filters');
+            const filterButtons = document.querySelectorAll('.gce-filter-btn');
+
+            // Fonction pour gérer l'affichage des filtres et du burger menu en fonction de la taille de l'écran
+            function handleResize() {
+                if (window.innerWidth > 550) {
+                    // Sur les grands écrans, le burger menu n'est pas nécessaire, et les filtres sont toujours visibles
+                    filters.style.display = 'flex'; // Afficher les filtres
+                    burgerMenu.style.display = 'none'; // Cacher le burger menu
+                } else {
+                    // Sur les petits écrans, cacher les filtres et afficher le burger menu
+                    filters.style.display = 'none'; // Cacher les filtres au départ
+                    burgerMenu.style.display = 'block'; // Afficher le burger menu
+                }
+            }
+
+            // Initialiser l'affichage selon la taille de la fenêtre
+            handleResize();
+
+            // Mettre à jour l'affichage lors du redimensionnement de la fenêtre
+            window.addEventListener('resize', handleResize);
+
+            // Gestion du clic sur le burger menu pour afficher/masquer les filtres sur mobile
+            burgerMenu.addEventListener('click', function() {
+                burgerMenu.classList.toggle('active');
+                if (filters.style.display === 'none') {
+                    filters.style.display = 'flex'; // Afficher les filtres quand le burger est activé
+                } else {
+                    filters.style.display = 'none'; // Cacher les filtres quand le burger est désactivé
+                }
+            });
+            // Fermer le menu quand on clique sur un bouton de filtre (seulement sur mobile)
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    if (window.innerWidth <= 550) { // Seulement sur petit écran
+                        burgerMenu.classList.remove('active');
+                        filters.style.display = 'none'; // Cacher les filtres après la sélection d'un filtre
+                    }
+                });
+            });
+        });
+    </script>
 <?php
     return ob_get_clean();
 }

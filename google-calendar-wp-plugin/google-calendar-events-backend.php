@@ -100,13 +100,13 @@ function gce_render_events_table($events, $filter)
     $settings = gce_get_settings(); // Récupération des paramètres
     $calendar_id = $settings['calendar_id']; // Utilisation de la bonne méthode pour récupérer l'ID
 
-
     echo '<div class="gce-events-wrapper">';
     echo '<table class="gce-events-table">';
     echo '<thead><tr>
             <th>Date</th>
             <th>Titre</th>
             <th>Lieu</th>
+            <th>Détails</th>
           </tr></thead>';
     echo '<tbody>';
 
@@ -124,6 +124,14 @@ function gce_render_events_table($events, $filter)
         $start = gce_format_event_date($event['start']['dateTime'] ?? $event['start']['date'], $is_all_day);
         $end = gce_format_event_date($event['end']['dateTime'] ?? $event['end']['date'], $is_all_day);
 
+        // Si l'événement dure une journée entière, soustraire un jour à la date de fin
+        if ($is_all_day) {
+            $end = (new DateTime($event['end']['date']))->modify('-1 day')->format('d/m/Y');
+        }
+
+        $event_id = $event['id'];
+        $event_link = 'https://calendar.google.com/calendar/u/0/r/eventedit/' . urlencode($event_id) . '?cid=' . urlencode($calendar_id);
+
         $category_color = '';
         foreach ($categories as $category) {
             if ('gce-' . $category['slug'] === $event_class) {
@@ -137,16 +145,23 @@ function gce_render_events_table($events, $filter)
         if ($category_color) {
             echo '<div class="gce-category-indicator" style="background-color: ' . esc_attr($category_color) . ';"></div>';
         }
-        echo '<div class="gce-start-date">' . esc_html($start) . '</div>';
-        if ($start !== $end && !($is_all_day && date('Y-m-d', strtotime($end)) === date('Y-m-d', strtotime($start)))) {
+
+        if ($start === $end) {
+            // Si la date de début est égale à la date de fin, afficher seulement la date de début
+            echo '<div class="gce-start-date">' . esc_html($start) . '</div>';
+        } else {
+            // Si elles sont différentes, afficher les deux
+            echo '<div class="gce-start-date">' . esc_html($start) . '</div>';
             echo '<div class="gce-date-separator"></div>';
             echo '<div class="gce-end-date">' . esc_html($end) . '</div>';
         }
         echo '</td>';
         echo '<td>' . esc_html($event['summary'] ?? 'Sans titre') . '</td>';
         echo '<td>' . esc_html($event['location'] ?? 'Non spécifié') . '</td>';
+        echo '<td><a href="' . esc_url($event['htmlLink']) . '" target="_blank">Voir plus</a></td>';
         echo '</tr>';
     }
+
 
     echo '</tbody></table></div>';
     echo '<div class="gce-calendar-link">';
