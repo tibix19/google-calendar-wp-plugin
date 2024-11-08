@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Athl\u00e9tisme",
+      "slug": "athletisme",
+      "color": "#98FB98"
+    },
+    {
+      "id": 3,
+      "name": "Gym & Danse",
+      "slug": "gd",
+      "color": "#bc69ed"
+    },
+    {
+      "id": 1729411444,
+      "name": "Artistique",
+      "slug": "artistique",
+      "color": "#f196df"
+    },
+    {
+      "id": 1729411991,
+      "name": "Actifs",
+      "slug": "actifs",
+      "color": "#b3ffff"
+    },
+    {
+      "id": 1729548662,
+      "name": "Agr\u00e8s",
+      "slug": "agres",
+      "color": "#ffff06"
+    }
+  ]
+}

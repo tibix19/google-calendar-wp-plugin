@@ -51,7 +51,8 @@
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s;
-    color: #333; /* Couleur du texte */
+    color: #333;
+    /* Couleur du texte */
 }
 
 #gce-filter-all {
@@ -61,39 +62,27 @@
 .gce-filter-btn.active {
     font-weight: bold;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-    transform: scale(1.05); /* Légère augmentation de taille */
+    transform: scale(1.05);
+    /* Légère augmentation de taille */
 }
 
 #gce-filter-all.active {
-    background-color: #d0d0d0; /* Plus foncé quand actif */
+    background-color: #d0d0d0;
+    /* Plus foncé quand actif */
 }
 
 .gce-calendar-link {
     margin-top: 20px;
-    text-align: center;
 }
-
 
 .gce-google-calendar-btn:hover {
     color: red;
     text-decoration: none;
 }
 
-/* Ajout d'un style pour les appareils mobiles */
-@media screen and (max-width: 500px) {
-    .gce-calendar-link {
-        margin-top: 15px;
-    }
-    
-    .gce-google-calendar-btn {
-        width: 100%;
-        text-align: center;
-        padding: 12px 20px;
-    }
-}
-
 
 @media screen and (max-width: 500px) {
+
     .gce-events-table,
     .gce-events-table thead,
     .gce-events-table tbody,
