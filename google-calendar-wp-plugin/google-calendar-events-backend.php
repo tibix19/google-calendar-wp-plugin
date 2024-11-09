@@ -73,6 +73,8 @@ function gce_get_event_class($summary)
 function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $filter = 'all')
 {
     $events_data = gce_fetch_events($api_key, $calendar_id, $sort_order);
+    $current_time = new DateTime();
+    $today = new DateTime('today');
 
     if (isset($events_data['error'])) {
         echo '<p>Erreur lors de la récupération des événements : ' . $events_data['error'] . '</p>';
@@ -84,21 +86,37 @@ function gce_display_events($api_key, $calendar_id, $sort_order = 'future', $fil
         return;
     }
 
-    usort($events_data['items'], function ($a, $b) use ($sort_order) {
-        $a_start = isset($a['start']['dateTime']) ? $a['start']['dateTime'] : $a['start']['date'];
-        $b_start = isset($b['start']['dateTime']) ? $b['start']['dateTime'] : $b['start']['date'];
-        return $sort_order == 'future' ? strcmp($a_start, $b_start) : strcmp($b_start, $a_start);
+    $filtered_events = array_filter($events_data['items'], function ($event) use ($today, $sort_order) {
+        $start_date = new DateTime($event['start']['dateTime'] ?? $event['start']['date']);
+        $end_date = new DateTime($event['end']['dateTime'] ?? $event['end']['date']);
+        $end_date->modify('-1 day'); // Pour gérer les événements en journée complète
+
+        if ($sort_order === 'future') {
+            // Inclut les événements d'aujourd'hui ou à venir comme "futurs"
+            return $end_date >= $today;
+        } elseif ($sort_order === 'past') {
+            // Inclut uniquement les événements entièrement passés
+            return $end_date < $today;
+        }
+
+        return true;
     });
 
-    gce_render_events_table($events_data['items'], $filter);
+    usort($filtered_events, function ($a, $b) use ($sort_order) {
+        $a_start = $a['start']['dateTime'] ?? $a['start']['date'];
+        $b_start = $b['start']['dateTime'] ?? $b['start']['date'];
+        return $sort_order === 'future' ? strcmp($a_start, $b_start) : strcmp($b_start, $a_start);
+    });
+
+    gce_render_events_table($filtered_events, $filter);
 }
 
 function gce_render_events_table($events, $filter)
 {
     $categories_manager = new GCE_Categories_Manager();
     $categories = $categories_manager->get_categories();
-    $settings = gce_get_settings(); // Récupération des paramètres
-    $calendar_id = $settings['calendar_id']; // Utilisation de la bonne méthode pour récupérer l'ID
+    $settings = gce_get_settings();
+    $calendar_id = $settings['calendar_id'];
 
     echo '<div class="gce-events-wrapper">';
     echo '<table class="gce-events-table">';
@@ -112,19 +130,31 @@ function gce_render_events_table($events, $filter)
 
     foreach ($events as $event) {
         $event_class = gce_get_event_class($event['summary'] ?? '');
-        if ($filter !== 'all' && $event_class !== 'gce-' . $filter) {
-            if ($filter === 'uncategorized' && $event_class !== 'gce-uncategorized') {
-                continue;
-            } elseif ($filter !== 'uncategorized' && $event_class !== '') {
-                continue;
-            }
+
+        // Nouvelle logique de filtrage
+        $should_display = false;
+
+        if ($filter === 'all') {
+            // Afficher tous les événements
+            $should_display = true;
+        } elseif ($filter === 'uncategorized') {
+            // Afficher uniquement les événements non catégorisés
+            $should_display = ($event_class === 'gce-uncategorized');
+        } else {
+            // Pour une catégorie spécifique, afficher :
+            // 1. Les événements de cette catégorie
+            // 2. Les événements non catégorisés
+            $should_display = ($event_class === 'gce-' . $filter) || ($event_class === 'gce-uncategorized');
+        }
+
+        if (!$should_display) {
+            continue;
         }
 
         $is_all_day = !isset($event['start']['dateTime']);
         $start = gce_format_event_date($event['start']['dateTime'] ?? $event['start']['date'], $is_all_day);
         $end = gce_format_event_date($event['end']['dateTime'] ?? $event['end']['date'], $is_all_day);
 
-        // Si l'événement dure une journée entière, soustraire un jour à la date de fin
         if ($is_all_day) {
             $end = (new DateTime($event['end']['date']))->modify('-1 day')->format('d/m/Y');
         }
@@ -147,10 +177,8 @@ function gce_render_events_table($events, $filter)
         }
 
         if ($start === $end) {
-            // Si la date de début est égale à la date de fin, afficher seulement la date de début
             echo '<div class="gce-start-date">' . esc_html($start) . '</div>';
         } else {
-            // Si elles sont différentes, afficher les deux
             echo '<div class="gce-start-date">' . esc_html($start) . '</div>';
             echo '<div class="gce-date-separator"></div>';
             echo '<div class="gce-end-date">' . esc_html($end) . '</div>';
@@ -161,7 +189,6 @@ function gce_render_events_table($events, $filter)
         echo '<td><a href="' . esc_url($event['htmlLink']) . '" target="_blank">Voir plus</a></td>';
         echo '</tr>';
     }
-
 
     echo '</tbody></table></div>';
     echo '<div class="gce-calendar-link">';
