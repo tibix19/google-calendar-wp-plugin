@@ -1,11 +1,14 @@
-## Plugin WP pour afficher les events d'un calendrier google pour le site gymmorges.ch
+## WP Plugin to Display Events from a Google Calendar API
 
-- Voir les events passés et futures
-- Redirectiuon vers le calendrier google
-- Filtre de couleur par groupes
-  - Pour que les filtres fonctionent, il faut mettre le nom du groupe dans le titre de l'event
-    - ex : "Athlétisme - xxxx"
+- API Connection
+- View past and upcoming events
+- Redirect to Google Calendar
+- Color filter by groups
+  - To make filters work, include the group name in the event title.
+  - Example: `Athletics - xxxx`
 
-Exemple : https://www.gymmorges.ch/calendrier-gym-morges/
+Add the shortcode `[gce_frontend_events]` to a page to embed the calendar.
+
+Example : https://www.gymmorges.ch/calendrier-gym-morges/
 
 <img src="image.png" alt="Description de l'image" width="75%"/>
